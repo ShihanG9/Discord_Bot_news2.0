@@ -103,13 +103,13 @@ posted_links: Deque[str] = load_posted_links()
 # ============================================================
 RSS_FEEDS: List[str] = [
     "https://simpleflying.com/feed",
-    "https://aeroworldindia.com/feed",
+    
     "https://www.flightglobal.com/rss",
     "https://aviationweek.com/rss.xml",
-    "https://www.aviationpros.com/rss",
+    
     "https://theaircurrent.com/feed",
-    "https://www.ch-aviation.com/portal/news/rss",
-    "https://centreforaviation.com/rss",
+    
+    
 ]
 
 ARTICLES_PER_FEED: int = 1
