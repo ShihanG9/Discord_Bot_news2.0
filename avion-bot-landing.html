@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AvionBot — Aviation News for Discord</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080c14;
+    --surface: #0d1525;
+    --surface2: #111e35;
+    --border: rgba(99,179,237,0.12);
+    --border2: rgba(99,179,237,0.25);
+    --sky: #63b3ed;
+    --sky-bright: #90cdf4;
+    --gold: #f6c45e;
+    --gold2: #fad88c;
+    --accent: #3182ce;
+    --accent2: #2b6cb0;
+    --text: #e2ecf8;
+    --muted: #7fa8c9;
+    --dim: #4a6fa8;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  /* ── STARFIELD ── */
+  .stars {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 25% 40%, rgba(255,255,255,.35) 0%, transparent 100%),
+      radial-gradient(1px 1px at 45% 10%, rgba(255,255,255,.45) 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 22%, rgba(255,255,255,.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 85% 55%, rgba(255,255,255,.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 60% 75%, rgba(255,255,255,.35) 0%, transparent 100%),
+      radial-gradient(1px 1px at 15% 80%, rgba(255,255,255,.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 35%, rgba(255,255,255,.25) 0%, transparent 100%),
+      radial-gradient(1px 1px at 38% 60%, rgba(255,255,255,.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 55% 90%, rgba(255,255,255,.4) 0%, transparent 100%);
+  }
+
+  .atmo-glow {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(49,130,206,0.18) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 30% at 80% 80%, rgba(246,196,94,0.06) 0%, transparent 70%);
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 5%;
+    height: 68px;
+    background: rgba(8,12,20,0.85);
+    backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    display: flex; align-items: center; gap: 11px;
+    text-decoration: none;
+  }
+
+  .nav-logo-icon {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--sky) 100%);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 0 18px rgba(49,130,206,0.5);
+  }
+
+  .nav-logo-text {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.25rem;
+    color: var(--text);
+    letter-spacing: -0.03em;
+  }
+
+  .nav-logo-text span { color: var(--sky); }
+
+  .nav-links {
+    display: flex; align-items: center; gap: 28px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-size: .875rem; font-weight: 500;
+    color: var(--muted); text-decoration: none;
+    transition: color .2s;
+  }
+
+  .nav-links a:hover { color: var(--text); }
+
+  .btn-nav {
+    background: linear-gradient(135deg, var(--accent) 0%, #4facde 100%);
+    color: #fff !important;
+    padding: 8px 20px !important;
+    border-radius: 8px;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 16px rgba(49,130,206,0.35);
+    transition: box-shadow .2s, transform .15s !important;
+  }
+  .btn-nav:hover { box-shadow: 0 6px 24px rgba(49,130,206,0.55) !important; transform: translateY(-1px); }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative; z-index: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+    padding: 110px 5% 80px;
+    min-height: 92vh;
+  }
+
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(49,130,206,0.12);
+    border: 1px solid rgba(49,130,206,0.3);
+    border-radius: 999px;
+    padding: 6px 16px;
+    font-size: .8rem; font-weight: 600;
+    color: var(--sky-bright);
+    letter-spacing: .06em; text-transform: uppercase;
+    margin-bottom: 32px;
+    animation: fadeUp .7s ease both;
+  }
+
+  .hero-badge::before {
+    content: '';
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--sky);
+    box-shadow: 0 0 8px var(--sky);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .4; }
+  }
+
+  /* plane orbit */
+  .plane-orbit {
+    position: absolute;
+    top: 18%; left: 50%;
+    transform: translateX(-50%);
+    width: 160px; height: 60px;
+    pointer-events: none;
+    animation: orbit 12s linear infinite;
+    z-index: 2;
+  }
+
+  .plane-icon {
+    font-size: 28px;
+    filter: drop-shadow(0 0 10px rgba(99,179,237,0.7));
+    animation: planeRoll 12s linear infinite;
+  }
+
+  @keyframes orbit {
+    0%   { transform: translateX(calc(-50% - 240px)) translateY(0); }
+    100% { transform: translateX(calc(-50% + 240px)) translateY(-30px); }
+  }
+
+  @keyframes planeRoll {
+    0%   { transform: rotate(-8deg); }
+    50%  { transform: rotate(5deg); }
+    100% { transform: rotate(-8deg); }
+  }
+
+  .hero-logo-wrap {
+    position: relative;
+    width: 110px; height: 110px;
+    margin: 0 auto 36px;
+    animation: fadeUp .7s .1s ease both;
+  }
+
+  .hero-logo-bg {
+    position: absolute; inset: -20px;
+    background: radial-gradient(circle, rgba(49,130,206,0.25) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: breathe 4s ease-in-out infinite;
+  }
+
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); opacity: .8; }
+    50% { transform: scale(1.12); opacity: 1; }
+  }
+
+  .hero-logo {
+    width: 110px; height: 110px;
+    background: linear-gradient(145deg, #1a3a6e 0%, #0d2246 100%);
+    border-radius: 28px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 54px;
+    border: 1.5px solid rgba(99,179,237,0.35);
+    box-shadow:
+      0 0 0 8px rgba(49,130,206,0.08),
+      0 20px 60px rgba(0,0,0,0.6),
+      inset 0 1px 0 rgba(255,255,255,0.07);
+    position: relative;
+  }
+
+  .hero-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(2.8rem, 6vw, 5rem);
+    line-height: 1.08;
+    letter-spacing: -0.04em;
+    margin-bottom: 22px;
+    background: linear-gradient(160deg, #ffffff 0%, var(--sky-bright) 55%, var(--sky) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: fadeUp .7s .2s ease both;
+  }
+
+  .hero-title em {
+    font-style: normal;
+    background: linear-gradient(120deg, var(--gold) 0%, var(--gold2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-desc {
+    max-width: 600px;
+    font-size: 1.1rem; font-weight: 300; line-height: 1.7;
+    color: var(--muted);
+    margin: 0 auto 44px;
+    animation: fadeUp .7s .3s ease both;
+  }
+
+  .hero-cta {
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: center;
+    animation: fadeUp .7s .4s ease both;
+  }
+
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: linear-gradient(135deg, #2563eb 0%, #38bdf8 100%);
+    color: #fff;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: 1rem;
+    padding: 15px 34px;
+    border-radius: 12px;
+    text-decoration: none;
+    border: none; cursor: pointer;
+    box-shadow: 0 8px 28px rgba(37,99,235,0.45), 0 0 0 1px rgba(255,255,255,0.05);
+    transition: transform .2s, box-shadow .2s;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 40px rgba(37,99,235,0.6), 0 0 0 1px rgba(255,255,255,0.1);
+  }
+
+  .btn-primary svg { width: 20px; height: 20px; }
+
+  .btn-ghost {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--sky-bright);
+    font-weight: 500; font-size: .95rem;
+    padding: 14px 28px;
+    border-radius: 12px;
+    text-decoration: none;
+    transition: background .2s, border-color .2s, transform .15s;
+  }
+
+  .btn-ghost:hover {
+    background: rgba(99,179,237,0.08);
+    border-color: var(--sky);
+    transform: translateY(-2px);
+  }
+
+  .hero-stats {
+    display: flex; gap: 48px; justify-content: center; flex-wrap: wrap;
+    margin-top: 72px;
+    animation: fadeUp .7s .5s ease both;
+  }
+
+  .stat { text-align: center; }
+
+  .stat-number {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 1.8rem;
+    color: var(--sky);
+    letter-spacing: -0.03em;
+  }
+
+  .stat-label {
+    font-size: .78rem; font-weight: 500;
+    color: var(--dim);
+    letter-spacing: .06em; text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* ── SECTION SHARED ── */
+  section { position: relative; z-index: 1; }
+
+  .section-label {
+    display: inline-block;
+    font-size: .75rem; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase;
+    color: var(--sky);
+    margin-bottom: 14px;
+  }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+    letter-spacing: -0.03em; line-height: 1.15;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+
+  .section-sub {
+    font-size: 1rem; font-weight: 300;
+    color: var(--muted); line-height: 1.7;
+    max-width: 520px;
+  }
+
+  /* ── DIVIDER ── */
+  .divider {
+    width: 100%; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border2) 40%, var(--border2) 60%, transparent);
+    margin: 0;
+  }
+
+  /* ── FEATURES ── */
+  .features-section {
+    padding: 100px 5%;
+  }
+
+  .features-header { text-align: center; margin-bottom: 64px; }
+  .features-header .section-sub { margin: 0 auto; }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .feature-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+    transition: transform .25s, border-color .25s, box-shadow .25s;
+  }
+
+  .feature-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--sky) 50%, transparent);
+    opacity: 0;
+    transition: opacity .25s;
+  }
+
+  .feature-card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(99,179,237,0.3);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 30px rgba(49,130,206,0.1);
+  }
+
+  .feature-card:hover::before { opacity: 1; }
+
+  .feat-icon {
+    width: 50px; height: 50px;
+    border-radius: 13px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+
+  .feat-icon.blue { background: rgba(49,130,206,0.15); }
+  .feat-icon.gold { background: rgba(246,196,94,0.12); }
+  .feat-icon.teal { background: rgba(56,189,248,0.12); }
+  .feat-icon.purple { background: rgba(139,92,246,0.12); }
+  .feat-icon.green { background: rgba(52,211,153,0.12); }
+  .feat-icon.red { background: rgba(252,129,74,0.12); }
+
+  .feat-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: 1.05rem;
+    margin-bottom: 10px;
+    color: var(--text);
+  }
+
+  .feat-desc {
+    font-size: .9rem; font-weight: 300; line-height: 1.65;
+    color: var(--muted);
+  }
+
+  /* ── NEWS BOX ── */
+  .news-section {
+    padding: 100px 5%;
+    background: linear-gradient(180deg, transparent 0%, rgba(13,21,37,0.6) 50%, transparent 100%);
+  }
+
+  .news-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1.6fr;
+    gap: 56px;
+    align-items: start;
+  }
+
+  .news-left { padding-top: 8px; }
+
+  .news-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(246,196,94,0.1);
+    border: 1px solid rgba(246,196,94,0.25);
+    border-radius: 999px;
+    padding: 5px 14px;
+    font-size: .75rem; font-weight: 700;
+    color: var(--gold);
+    letter-spacing: .06em; text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .news-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+  }
+
+  .news-box-header {
+    background: linear-gradient(135deg, #0f2347 0%, #1a3a6e 100%);
+    padding: 20px 26px;
+    display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .news-box-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-r { background: #fc8181; }
+  .dot-y { background: #f6e05e; }
+  .dot-g { background: #68d391; }
+
+  .news-box-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: .85rem;
+    color: var(--sky-bright);
+    margin-left: auto;
+    margin-right: auto;
+    letter-spacing: .04em;
+  }
+
+  .news-items { padding: 8px 0; }
+
+  .news-item {
+    padding: 18px 26px;
+    border-bottom: 1px solid var(--border);
+    display: flex; gap: 16px; align-items: flex-start;
+    transition: background .2s;
+  }
+
+  .news-item:last-child { border-bottom: none; }
+  .news-item:hover { background: rgba(49,130,206,0.06); }
+
+  .news-item-icon {
+    font-size: 22px; flex-shrink: 0; margin-top: 2px;
+    filter: drop-shadow(0 0 6px rgba(99,179,237,0.4));
+  }
+
+  .news-item-cat {
+    font-size: .68rem; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+
+  .news-item-title {
+    font-weight: 500; font-size: .9rem; line-height: 1.45;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .news-item-desc {
+    font-size: .8rem; font-weight: 300; line-height: 1.55;
+    color: var(--muted);
+  }
+
+  .news-item-time {
+    font-size: .72rem; color: var(--dim); margin-top: 6px;
+  }
+
+  .news-ticker {
+    background: rgba(49,130,206,0.08);
+    border-top: 1px solid var(--border);
+    padding: 10px 26px;
+    font-size: .78rem;
+    color: var(--sky);
+    display: flex; align-items: center; gap: 10px;
+    overflow: hidden;
+  }
+
+  .ticker-label {
+    font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    flex-shrink: 0; color: var(--gold); font-size: .72rem;
+  }
+
+  .ticker-text {
+    white-space: nowrap;
+    animation: ticker 22s linear infinite;
+  }
+
+  @keyframes ticker {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-150%); }
+  }
+
+  /* ── COMMANDS ── */
+  .commands-section {
+    padding: 100px 5%;
+  }
+
+  .commands-inner {
+    max-width: 900px; margin: 0 auto;
+  }
+
+  .commands-header { text-align: center; margin-bottom: 52px; }
+  .commands-header .section-sub { margin: 0 auto; }
+
+  .cmd-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 14px;
+  }
+
+  .cmd-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 24px;
+    display: flex; align-items: center; gap: 14px;
+    transition: border-color .2s, background .2s, transform .2s;
+  }
+
+  .cmd-card:hover {
+    border-color: rgba(99,179,237,0.3);
+    background: var(--surface2);
+    transform: translateX(4px);
+  }
+
+  .cmd-name {
+    font-family: 'Courier New', monospace;
+    font-size: .9rem; font-weight: 700;
+    color: var(--sky-bright);
+    background: rgba(49,130,206,0.1);
+    border-radius: 6px;
+    padding: 3px 9px;
+    white-space: nowrap;
+  }
+
+  .cmd-desc {
+    font-size: .85rem; color: var(--muted); font-weight: 300;
+  }
+
+  /* ── INSTALL CTA ── */
+  .cta-section {
+    padding: 100px 5%;
+    text-align: center;
+  }
+
+  .cta-box {
+    max-width: 700px; margin: 0 auto;
+    background: linear-gradient(145deg, #0d1e3d 0%, #0f2347 100%);
+    border: 1px solid rgba(99,179,237,0.2);
+    border-radius: 28px;
+    padding: 64px 48px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+  }
+
+  .cta-box::before {
+    content: '';
+    position: absolute; top: -60px; left: 50%; transform: translateX(-50%);
+    width: 300px; height: 120px;
+    background: rgba(49,130,206,0.15);
+    border-radius: 50%;
+    filter: blur(40px);
+  }
+
+  .cta-emoji { font-size: 56px; margin-bottom: 24px; display: block; }
+
+  .cta-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: clamp(1.8rem, 4vw, 2.5rem);
+    letter-spacing: -0.03em;
+    margin-bottom: 16px;
+    background: linear-gradient(160deg, #fff 0%, var(--sky-bright) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .cta-desc {
+    font-size: 1rem; font-weight: 300; color: var(--muted); line-height: 1.7;
+    margin-bottom: 38px;
+  }
+
+  .install-link-box {
+    background: rgba(8,12,20,0.7);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    padding: 14px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 28px;
+    text-align: left;
+  }
+
+  .install-link-label {
+    font-size: .72rem; font-weight: 700;
+    letter-spacing: .07em; text-transform: uppercase;
+    color: var(--sky); margin-bottom: 4px;
+  }
+
+  .install-link-url {
+    font-family: 'Courier New', monospace;
+    font-size: .78rem; color: var(--muted);
+    word-break: break-all;
+  }
+
+  .copy-btn {
+    background: var(--surface2); border: 1px solid var(--border2);
+    color: var(--sky); border-radius: 8px; padding: 8px 14px;
+    font-size: .78rem; font-weight: 600; cursor: pointer;
+    white-space: nowrap; flex-shrink: 0;
+    transition: background .2s, color .2s;
+  }
+
+  .copy-btn:hover { background: rgba(49,130,206,0.2); color: var(--sky-bright); }
+
+  /* ── FOOTER ── */
+  footer {
+    position: relative; z-index: 1;
+    border-top: 1px solid var(--border);
+    padding: 36px 5%;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 16px;
+  }
+
+  .footer-left {
+    display: flex; align-items: center; gap: 10px;
+    font-size: .85rem; color: var(--dim);
+  }
+
+  .footer-logo { font-size: 18px; }
+
+  .footer-right {
+    font-size: .78rem; color: var(--dim);
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── SCROLL REVEAL ── */
+  .reveal {
+    opacity: 0; transform: translateY(30px);
+    transition: opacity .7s ease, transform .7s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1; transform: translateY(0);
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .news-inner { grid-template-columns: 1fr; }
+    .hero-stats { gap: 28px; }
+    footer { flex-direction: column; text-align: center; }
+    .nav-links { display: none; }
+    .cta-box { padding: 40px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stars"></div>
+<div class="atmo-glow"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    <div class="nav-logo-icon">✈️</div>
+    <span class="nav-logo-text">Avion<span>Bot</span></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#news">News Feed</a></li>
+    <li><a href="#commands">Commands</a></li>
+    <li><a href="https://discord.com/oauth2/authorize?client_id=1493701522658168832" class="btn-nav">Add to Discord</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="plane-orbit">
+    <span class="plane-icon">✈️</span>
+  </div>
+
+  <div class="hero-badge">
+    ✦ Live Aviation Intelligence
+  </div>
+
+  <div class="hero-logo-wrap">
+    <div class="hero-logo-bg"></div>
+    <div class="hero-logo">✈️</div>
+  </div>
+
+  <h1 class="hero-title">
+    Your Server's<br><em>Aviation Hub</em>
+  </h1>
+
+  <p class="hero-desc">
+    AvionBot delivers real-time aviation news, flight alerts, airline updates, and aerospace developments straight into your Discord server — the moment it happens.
+  </p>
+
+  <div class="hero-cta">
+    <a href="https://discord.com/oauth2/authorize?client_id=1493701522658168832" class="btn-primary">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+      Add to Discord — Free
+    </a>
+    <a href="#features" class="btn-ghost">Explore Features →</a>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-number">24/7</div>
+      <div class="stat-label">Live Updates</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number">100+</div>
+      <div class="stat-label">News Sources</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number">Free</div>
+      <div class="stat-label">Always</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number">&lt;1min</div>
+      <div class="stat-label">Setup Time</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- FEATURES -->
+<section class="features-section" id="features">
+  <div class="features-header reveal">
+    <div class="section-label">✦ What AvionBot Does</div>
+    <h2 class="section-title">Everything Aviation,<br>In One Bot</h2>
+    <p class="section-sub">Purpose-built for aviation enthusiasts, pilots, spotters, and aerospace professionals.</p>
+  </div>
+
+  <div class="features-grid">
+    <div class="feature-card reveal">
+      <div class="feat-icon blue">🗞️</div>
+      <div class="feat-title">Breaking Aviation News</div>
+      <p class="feat-desc">Get the latest headlines from global aviation news sources the second they're published — accidents, incidents, and milestones.</p>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feat-icon gold">✈️</div>
+      <div class="feat-title">Flight & Airline Updates</div>
+      <p class="feat-desc">Track new routes, airline announcements, fleet deliveries, and schedule changes from carriers around the world.</p>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feat-icon teal">🛸</div>
+      <div class="feat-title">Aerospace & Technology</div>
+      <p class="feat-desc">Stay ahead with news on next-gen aircraft, eVTOL developments, space aviation, and cutting-edge propulsion tech.</p>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feat-icon purple">📡</div>
+      <div class="feat-title">Real-Time Alerts</div>
+      <p class="feat-desc">Configurable alerts for NOTAMs, airspace closures, major incidents, and regulatory changes that matter to your community.</p>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feat-icon green">🏆</div>
+      <div class="feat-title">Industry & Business News</div>
+      <p class="feat-desc">Follow airline mergers, airport expansions, stock movements, and the business stories shaping the aviation industry.</p>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feat-icon red">🎯</div>
+      <div class="feat-title">Easy Setup & Control</div>
+      <p class="feat-desc">One-click install. Set your preferred channel, categories, and frequency — AvionBot does the rest, automatically.</p>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- NEWS BOX -->
+<section class="news-section" id="news">
+  <div class="news-inner">
+    <div class="news-left reveal">
+      <div class="news-tag">📰 Live Feed Preview</div>
+      <h2 class="section-title">Aviation News,<br>Delivered Live</h2>
+      <p class="section-sub" style="margin-bottom: 28px;">
+        AvionBot aggregates news from the world's top aviation sources — delivering categorized, clean, and relevant updates directly to your Discord channels.
+      </p>
+      <p class="section-sub">
+        From commercial aviation to military aerospace, general aviation to space exploration — every category covered, every day.
+      </p>
+
+      <div style="margin-top: 36px; display: flex; flex-direction: column; gap: 14px;">
+        <div style="display: flex; align-items: center; gap: 10px; font-size: .88rem; color: var(--muted);">
+          <span style="color: var(--sky); font-size: 1rem;">⚡</span> Instant delivery — no delays
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; font-size: .88rem; color: var(--muted);">
+          <span style="color: var(--sky); font-size: 1rem;">🔍</span> Smart categorization by topic
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; font-size: .88rem; color: var(--muted);">
+          <span style="color: var(--sky); font-size: 1rem;">🌐</span> Global sources, local relevance
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; font-size: .88rem; color: var(--muted);">
+          <span style="color: var(--sky); font-size: 1rem;">🎛️</span> Filter by category or region
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal">
+      <div class="news-box">
+        <div class="news-box-header">
+          <span class="news-box-dot dot-r"></span>
+          <span class="news-box-dot dot-y"></span>
+          <span class="news-box-dot dot-g"></span>
+          <div class="news-box-title">✈️ AvionBot — #aviation-news</div>
+        </div>
+
+        <div class="news-items">
+          <div class="news-item">
+            <div class="news-item-icon">🛫</div>
+            <div>
+              <div class="news-item-cat">Airline News</div>
+              <div class="news-item-title">Emirates Expands A380 Fleet with 35 New Orders</div>
+              <div class="news-item-desc">Emirates has confirmed a landmark order for 35 additional Airbus A380 superjumbos, reinforcing its position as the world's largest operator of the double-decker aircraft.</div>
+              <div class="news-item-time">🕐 2 minutes ago • simpleflying.com</div>
+            </div>
+          </div>
+          <div class="news-item">
+            <div class="news-item-icon">⚠️</div>
+            <div>
+              <div class="news-item-cat" style="color: #fc8181;">Safety Alert</div>
+              <div class="news-item-title">FAA Issues AD for Boeing 737 MAX Rudder System</div>
+              <div class="news-item-desc">The Federal Aviation Administration has issued an Airworthiness Directive requiring inspections of the rudder control system on certain 737 MAX variants.</div>
+              <div class="news-item-time">🕐 18 minutes ago • avherald.com</div>
+            </div>
+          </div>
+          <div class="news-item">
+            <div class="news-item-icon">🚀</div>
+            <div>
+              <div class="news-item-cat" style="color: #9f7aea;">Aerospace Tech</div>
+              <div class="news-item-title">Airbus Reveals ZEROe Hydrogen Engine Test Results</div>
+              <div class="news-item-desc">Airbus has published promising ground-test data for its hydrogen combustion demonstrator engine, a key milestone in the ZEROe zero-emission aircraft program targeting 2035 entry into service.</div>
+              <div class="news-item-time">🕐 45 minutes ago • airbus.com</div>
+            </div>
+          </div>
+          <div class="news-item">
+            <div class="news-item-icon">🏗️</div>
+            <div>
+              <div class="news-item-cat">Airport News</div>
+              <div class="news-item-title">Heathrow Terminal 2 Expansion Approved by UK Government</div>
+              <div class="news-item-desc">The UK government has given the green light for Heathrow Airport's Terminal 2 expansion, expected to add 10 million passengers of annual capacity by 2030.</div>
+              <div class="news-item-time">🕐 1 hour ago • atwonline.com</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="news-ticker">
+          <span class="ticker-label">Live</span>
+          <span class="ticker-text">SpiceJet receives DGCA clearance for 10 new routes · Lufthansa Group reports record Q3 revenue · Joby Aviation completes 500th test flight · IATA forecasts 4.7B passengers in 2025 · Air India A350 maiden flight to London · Boom Supersonic XB-1 breaks sound barrier ·</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- COMMANDS -->
+<section class="commands-section" id="commands">
+  <div class="commands-inner">
+    <div class="commands-header reveal">
+      <div class="section-label">✦ Bot Commands</div>
+      <h2 class="section-title">Simple Commands,<br>Powerful Control</h2>
+      <p class="section-sub">Everything you need to manage your aviation news feed with slash commands.</p>
+    </div>
+
+    <div class="cmd-grid">
+      <div class="cmd-card reveal">
+        <span style="font-size: 20px;">📰</span>
+        <div>
+          <div class="cmd-name">/news</div>
+          <div class="cmd-desc" style="margin-top: 4px;">Fetch latest aviation headlines</div>
+        </div>
+      </div>
+      <div class="cmd-card reveal">
+        <span style="font-size: 20px;">⚙️</span>
+        <div>
+          <div class="cmd-name">/setup</div>
+          <div class="cmd-desc" style="margin-top: 4px;">Configure news channel & categories</div>
+        </div>
+      </div>
+      <div class="cmd-card reveal">
+        <span style="font-size: 20px;">🔔</span>
+        <div>
+          <div class="cmd-name">/alerts</div>
+          <div class="cmd-desc" style="margin-top: 4px;">Manage real-time alert settings</div>
+        </div>
+      </div>
+      <div class="cmd-card reveal">
+        <span style="font-size: 20px;">🔍</span>
+        <div>
+          <div class="cmd-name">/search</div>
+          <div class="cmd-desc" style="margin-top: 4px;">Search aviation news by keyword</div>
+        </div>
+      </div>
+      <div class="cmd-card reveal">
+        <span style="font-size: 20px;">📊</span>
+        <div>
+          <div class="cmd-name">/categories</div>
+          <div class="cmd-desc" style="margin-top: 4px;">Browse all news categories</div>
+        </div>
+      </div>
+      <div class="cmd-card reveal">
+        <span style="font-size: 20px;">❓</span>
+        <div>
+          <div class="cmd-name">/help</div>
+          <div class="cmd-desc" style="margin-top: 4px;">View all commands & usage guide</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- CTA -->
+<section class="cta-section" id="install">
+  <div class="cta-box reveal">
+    <span class="cta-emoji">✈️</span>
+    <h2 class="cta-title">Ready for Takeoff?</h2>
+    <p class="cta-desc">Add AvionBot to your Discord server in one click — free forever. Start receiving real-time aviation news, alerts, and updates instantly.</p>
+
+    <div class="install-link-box">
+      <div>
+        <div class="install-link-label">📎 Install Link</div>
+        <div class="install-link-url">discord.com/oauth2/authorize?client_id=1493701522658168832</div>
+      </div>
+      <button class="copy-btn" onclick="
+        navigator.clipboard.writeText('https://discord.com/oauth2/authorize?client_id=1493701522658168832');
+        this.textContent = 'Copied!';
+        setTimeout(() => this.textContent = 'Copy', 2000);
+      ">Copy</button>
+    </div>
+
+    <a href="https://discord.com/oauth2/authorize?client_id=1493701522658168832" class="btn-primary" style="font-size: 1.05rem; padding: 17px 40px;">
+      <svg viewBox="0 0 24 24" fill="currentColor" style="width:22px;height:22px"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+      Add AvionBot to Discord — Free
+    </a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-left">
+    <span class="footer-logo">✈️</span>
+    <span><strong style="color: var(--sky-bright);">AvionBot</strong> — Aviation News for Discord</span>
+  </div>
+  <div class="footer-right">
+    Not affiliated with Discord Inc. · For aviation enthusiasts, by aviation enthusiasts.
+  </div>
+</footer>
+
+<script>
+  // Scroll reveal
+  const revealEls = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 80);
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  revealEls.forEach(el => io.observe(el));
+</script>
+</body>
+</html>

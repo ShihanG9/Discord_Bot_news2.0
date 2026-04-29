@@ -150,7 +150,7 @@ RSS_FEEDS: List[str] = [
     "https://centreforaviation.com/rss",
 ]
 
-ARTICLES_PER_FEED: int = 5
+ARTICLES_PER_FEED: int = 3
 
 
 # ============================================================
